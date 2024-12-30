@@ -10,17 +10,17 @@
 
 #include "zmk-helpers/helper.h"
 
-
-&mt {
-  //  flavor = "tap-preferred";
-   // tapping_term_ms = <200>;
+&sk {  // sticky-key config
+    release-after-ms = <900>;  // release after 0.9s
+    quick-release;             // no double capitalization when rolling keys
 };
+
 &lt {
     tapping-term-ms = <200>;
 };
 
 /* source key definitions */
-#include "zmk-helpers/key-labels/36.h"
+#include "zmk-helpers/key-labels/34.h"
 
 /* Homerow mods */
 #define QUICK_TAP_MS 175
@@ -41,12 +41,21 @@
 MAKE_HRM(hml, &kp, &kp, KEYS_R THUMBS)  // left-hand HRMs
 MAKE_HRM(hmr, &kp, &kp, KEYS_L THUMBS)  // right-hand HRMs
 
-/* Sticky shift*/
+/* Sticky shift + hold tap*/
 ZMK_BEHAVIOR(shft, hold_tap,
     flavor = "balanced";
     tapping-term-ms = <175>;
     quick-tap-ms = <125>;
     bindings = <&mo>, <&sk>;
+)
+
+// Cmd+Tab swapper, requires PR #1366
+ZMK_TRI_STATE(swapper,
+    bindings = <&kt LCMD>, <&kp TAB>, <&kt LCMD>;
+    ignored-key-positions = <LT4 LT3 LM3 LM2>;
+)
+ZMK_TRI_STATE(swapper_app,
+    bindings = <&kt LCMD>, <&kp GRAVE>, <&kt LCMD>;
 )
 
 / {
@@ -76,17 +85,17 @@ ZMK_BEHAVIOR(shft, hold_tap,
         right_layer {
             display-name = "code";
             bindings = <
-            &kp TILDE  &kp EXCL     &kp AT    &kp HASH   &kp DLLR       &kp DQT &kp LPAR  &kp RPAR   &trans   &kp MINUS
+            &kp GRAVE  &kp EXCL     &kp AT    &kp HASH   &kp DLLR       &kp DQT &kp LPAR  &kp RPAR   &trans   &kp MINUS
             &kp TAB    &kp PRCNT    &kp CARET &kp AMPS   &kp STAR       &kp SQT &kp LBRC  &kp RBRC   &trans   &kp EQUAL
             &trans     &trans       &trans    &trans     &trans         &trans  &kp LBKT  &kp RBKT   &trans   &kp BSLH
-                                                  &trans  &trans      &trans &trans
+                                                  &sk LSHFT  &trans      &trans &trans
             >;
         };
 
         bottom_layer {
             display-name = "number";
             bindings = <
-            &studio_unlock   &trans   &trans    &trans   &trans           &trans  &kp N1  &kp N2   &kp N3   &trans
+            &studio_unlock   &bootloader   &trans    &trans   &trans           &trans  &kp N1  &kp N2   &kp N3   &trans
             &trans   &trans   &trans    &trans   &trans           &trans  &kp N4  &kp N5   &kp N6   &trans
             &bt BT_CLR &bt BT_NXT &bt BT_PRV &bt BT_CLR_ALL   &trans           &trans  &kp N7  &kp N8   &kp N9   &kp N0
                                             &trans  &trans     &trans &trans
@@ -97,7 +106,7 @@ ZMK_BEHAVIOR(shft, hold_tap,
             display-name = "nav";
             bindings = <
             &kp GRAVE    &kp EXCL     &kp AT     &kp HASH   &kp DLLR       &trans &kp BSPC  &kp UP   &kp DEL   &trans
-            &kp TAB      &kp PRCNT    &kp CARET  &kp AMPS   &kp STAR       &trans &kp LEFT  &kp DOWN &kp RIGHT &trans
+            &kp TAB      &swapper_app    &kp LS(TAB)  &swapper   &kp STAR       &trans &kp LEFT  &kp DOWN &kp RIGHT &trans
             &kp C_BRI_DN &kp C_BRI_UP       &kp C_PREV &kp C_PP   &kp C_NEXT         &kp C_MUTE &kp C_VOL_DN &kp C_VOL_UP &trans &trans
                                                   &trans  &trans      &trans &trans
             >;
