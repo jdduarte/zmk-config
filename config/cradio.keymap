@@ -58,6 +58,43 @@ ZMK_TRI_STATE(swapper_app,
     bindings = <&kt LCMD>, <&kp GRAVE>, <&kt LCMD>;
 )
 
+/* AeroSpace (macOS tiling WM) -------------------------------------------
+ * AeroSpace binds everything to Ctrl+Alt (+Shift) + key. Two layers send
+ * those shortcuts so no pinky/ring home-row mods are needed:
+ *   AERO      - momentary: hold Enter (right inner thumb)
+ *   AERO_MODE - toggled: tap W+E; stays on for focus/move/layout keys,
+ *               turns itself off after workspace keys. Exit with W+E, Q+W,
+ *               or the Enter thumb.
+ * In both layers the left thumbs are Shift (tap = sticky, hold = held).
+ */
+#define AERO 4
+#define AERO_MODE 5
+
+#define AK(key) &kp LC(LA(key))       // send Ctrl+Alt+key
+#define AX(key) &aero_exit LC(LA(key)) // send Ctrl+Alt+key, then leave AERO_MODE
+
+// Enter: tap = Enter, hold = AERO layer
+ZMK_HOLD_TAP(ent_aero,
+    flavor = "balanced";
+    tapping-term-ms = <200>;
+    quick-tap-ms = <175>;
+    require-prior-idle-ms = <150>;  // typing fast -> always Enter
+    bindings = <&mo>, <&kp>;
+)
+
+// Left thumbs inside the AeroSpace layers: tap = sticky Shift, hold = Shift
+ZMK_HOLD_TAP(aero_shft,
+    flavor = "balanced";
+    tapping-term-ms = <175>;
+    quick-tap-ms = <125>;
+    bindings = <&kp>, <&sk>;
+)
+
+// Send a key, then switch AERO_MODE off
+ZMK_MACRO_ONE_PARAM(aero_exit,
+    bindings = <&macro_param_1to1>, <&kp MACRO_PLACEHOLDER>, <&tog AERO_MODE>;
+)
+
 / {
 
     combos {
@@ -66,6 +103,20 @@ ZMK_TRI_STATE(swapper_app,
             timeout-ms = <50>;
             key-positions = <0 1>;
             bindings = <&kp ESC>;
+            layers = <0 1 2 3 AERO>;  // in AERO_MODE, Q+W just exits (see below)
+        };
+        combo_aero_mode {  // W+E: enter/leave AeroSpace mode
+            timeout-ms = <40>;
+            require-prior-idle-ms = <150>;  // don't fire when rolling "we" mid-typing
+            key-positions = <LT3 LT2>;
+            bindings = <&tog AERO_MODE>;
+            layers = <0 AERO_MODE>;
+        };
+        combo_aero_mode_esc {  // Q+W in AeroSpace mode: leave without sending Esc
+            timeout-ms = <50>;
+            key-positions = <LT4 LT3>;
+            bindings = <&tog AERO_MODE>;
+            layers = <AERO_MODE>;
         };
     };
 
@@ -78,7 +129,7 @@ ZMK_TRI_STATE(swapper_app,
             &kp Q        &kp W       &kp E       &kp R        &kp T                       &kp Y &kp U        &kp I       &kp O       &kp P
             &hml LCTRL A &hml LALT S &hml LCMD D &hml LSHFT F &kp G                       &kp H &hmr RSHFT J &hmr RCMD K &hmr RALT L &hmr RCTRL SEMI
             &kp Z        &kp X       &kp C       &kp V        &kp B                       &kp N &kp M        &kp CMMA    &kp DOT     &kp SLASH
-                                                  &shft 3 LSHFT &shft 2 LSHFT       &kp RET &lt 1 SPACE
+                                                  &shft 3 LSHFT &shft 2 LSHFT       &ent_aero AERO RET &lt 1 SPACE
             >;
         };
 
@@ -109,6 +160,32 @@ ZMK_TRI_STATE(swapper_app,
             &kp TAB      &swapper_app    &kp LS(TAB)  &swapper   &kp STAR       &trans &kp LEFT  &kp DOWN &kp RIGHT &trans
             &kp C_BRI_DN &kp C_BRI_UP       &kp C_PREV &kp C_PP   &kp C_NEXT         &kp C_MUTE &kp C_VOL_DN &kp C_VOL_UP &trans &trans
                                                   &trans  &trans      &trans &trans
+            >;
+        };
+
+        // Hold Enter. Every key = Ctrl+Alt+key; i/j/k/l = focus up/left/down/right.
+        // H = Ctrl+Alt+Tab (workspace back-and-forth), . = Ctrl+Alt+- (shrink),
+        // right outer thumb = Ctrl+Alt+= (grow). Left thumbs = Shift.
+        aero_layer {
+            display-name = "aero";
+            bindings = <
+            AK(Q)   AK(W)   AK(E)   AK(R)   AK(T)                 AK(Y)   AK(U)   AK(I)    AK(O)     AK(P)
+            AK(A)   AK(S)   AK(D)   AK(F)   AK(G)                 AK(TAB) AK(J)   AK(K)    AK(L)     AK(SEMI)
+            AK(Z)   AK(X)   AK(C)   AK(V)   AK(B)                 AK(N)   AK(M)   AK(CMMA) AK(MINUS) AK(SLASH)
+                            &aero_shft LSHFT LSHFT &aero_shft LSHFT LSHFT     &trans  AK(EQUAL)
+            >;
+        };
+
+        // Tap W+E. Same keys as aero_layer, but workspace keys (letters),
+        // F (fullscreen), H (back-and-forth) and ; (service mode) leave the mode
+        // afterwards. Focus/move (i/j/k/l), layouts (, /) and resize (. =) stay.
+        aero_mode_layer {
+            display-name = "aeromode";
+            bindings = <
+            AX(Q)   AX(W)   AX(E)   AX(R)   AX(T)                 AX(Y)   AX(U)   AK(I)    AX(O)     AX(P)
+            AX(A)   AX(S)   AX(D)   AX(F)   AX(G)                 AX(TAB) AK(J)   AK(K)    AK(L)     AX(SEMI)
+            AX(Z)   AX(X)   AX(C)   AX(V)   AX(B)                 AX(N)   AX(M)   AK(CMMA) AK(MINUS) AK(SLASH)
+                            &aero_shft LSHFT LSHFT &aero_shft LSHFT LSHFT     &tog AERO_MODE  AK(EQUAL)
             >;
         };
 
