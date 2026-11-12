@@ -27,6 +27,8 @@ manifest:
       url-base: https://github.com/urob
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
+    - name: ykiewang
+      url-base: https://github.com/ykiewang
 
   projects:
     - name: zmk
@@ -41,6 +43,10 @@ manifest:
     - name: zmk-tri-state
       path: modules/zmk/tri-state
       revision: c08969627245adeddbcdb6dfc1a4c167c04160e2 # main (2026-10-19)
+    - name: zmk-keybeacon
+      remote: ykiewang
+      path: modules/zmk/keybeacon
+      revision: 66f2486ce3d42d56b7a7853f57f988052a35f98b # v1.2.0 (known-good with zmk 4dd95d7)
 
     # Avoid downloading GBs of unused Zephyr modules. Remove this section to
     # restore the default (needed for less common hardware).
